@@ -1,0 +1,43 @@
+[build-system]
+requires = ["scikit-build-core>=0.11,<1", "pybind11>=3,<4"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "pfe"
+version = "0.1.0"
+description = "Price Feature Engineering: a library for market price features"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "numpy>=2,<2.4",
+    "pandas>=2.2,<3",
+    "pyarrow>=19",
+    "TA-Lib>=0.6.5,<0.7",
+    "scipy>=1.15,<2",
+    "PyWavelets>=1.8,<2",
+    "numba>=0.66,<1",
+]
+
+[project.optional-dependencies]
+lse = ["lse-data>=0.14,<0.15"]
+plots = ["matplotlib>=3.9,<4"]
+
+[dependency-groups]
+dev = ["pytest>=8,<10", "ruff>=0.11,<1"]
+
+[tool.scikit-build]
+wheel.packages = ["src/pfe"]
+cmake.build-type = "Release"
+build-dir = "build/{wheel_tag}"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+filterwarnings = ["error"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]

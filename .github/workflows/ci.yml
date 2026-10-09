@@ -1,0 +1,24 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.12", "3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: uv python install ${{ matrix.python-version }}
+      - run: uv sync --locked --extra lse --extra plots --python ${{ matrix.python-version }}
+      - run: uv run --no-sync ruff check .
+      - run: uv run --no-sync ruff format --check .
+      - run: uv run --no-sync pytest
+      - run: uv run --no-sync python examples/quickstart.py
+      - run: uv run --no-sync python examples/features.py
+      - run: MPLBACKEND=Agg uv run --no-sync python examples/plots.py
+      - run: uv build
