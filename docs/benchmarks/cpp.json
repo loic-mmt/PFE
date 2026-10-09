@@ -1,0 +1,242 @@
+{
+  "python": "3.12.14",
+  "numpy": "2.3.5",
+  "pandas": "2.3.3",
+  "system": "macOS-26.5.1-arm64-arm-64bit",
+  "machine": "arm64",
+  "rows": 100000,
+  "repeat": 3,
+  "window": 20,
+  "frequency": "30min",
+  "comparisons": [
+    {
+      "case": "tpo",
+      "speedup": 234.05438053962743,
+      "python": {
+        "case": "tpo",
+        "backend": "python",
+        "rows": 100000,
+        "output_rows": 3333,
+        "numeric_columns": 6,
+        "samples_seconds": [
+          1.6403524170164019,
+          1.6295842080144212,
+          1.6111787089612335
+        ],
+        "median_seconds": 1.6295842080144212,
+        "setup_seconds": 0.24513408401980996,
+        "peak_rss_mib": 204.8125,
+        "checksum": 1047023.769524233,
+        "nan_count": 0
+      },
+      "cpp": {
+        "case": "tpo",
+        "backend": "cpp",
+        "rows": 100000,
+        "output_rows": 3333,
+        "numeric_columns": 6,
+        "samples_seconds": [
+          0.007455957937054336,
+          0.006962417042814195,
+          0.006669249967671931
+        ],
+        "median_seconds": 0.006962417042814195,
+        "setup_seconds": 0.06771858397405595,
+        "peak_rss_mib": 165.328125,
+        "checksum": 1047023.769524233,
+        "nan_count": 0
+      }
+    },
+    {
+      "case": "intrabar",
+      "speedup": 37.46780549701163,
+      "python": {
+        "case": "intrabar",
+        "backend": "python",
+        "rows": 100000,
+        "output_rows": 3333,
+        "numeric_columns": 8,
+        "samples_seconds": [
+          0.8911501669790596,
+          0.8717034169239923,
+          0.8765702500240877
+        ],
+        "median_seconds": 0.8765702500240877,
+        "setup_seconds": 0.068145208992064,
+        "peak_rss_mib": 165.78125,
+        "checksum": 5282420.380131762,
+        "nan_count": 2465
+      },
+      "cpp": {
+        "case": "intrabar",
+        "backend": "cpp",
+        "rows": 100000,
+        "output_rows": 3333,
+        "numeric_columns": 8,
+        "samples_seconds": [
+          0.023659541038796306,
+          0.02339529199525714,
+          0.0230420840671286
+        ],
+        "median_seconds": 0.02339529199525714,
+        "setup_seconds": 0.06886595906689763,
+        "peak_rss_mib": 165.328125,
+        "checksum": 5282420.380131762,
+        "nan_count": 2465
+      }
+    },
+    {
+      "case": "window_mad",
+      "speedup": 85.02127965675237,
+      "python": {
+        "case": "window_mad",
+        "backend": "python",
+        "rows": 100000,
+        "output_rows": 100000,
+        "numeric_columns": 1,
+        "samples_seconds": [
+          1.3560647499980405,
+          1.3367190830176696,
+          1.3516045410651714
+        ],
+        "median_seconds": 1.3516045410651714,
+        "setup_seconds": 0.03718837501946837,
+        "peak_rss_mib": 164.421875,
+        "checksum": 59865.614636411905,
+        "nan_count": 19
+      },
+      "cpp": {
+        "case": "window_mad",
+        "backend": "cpp",
+        "rows": 100000,
+        "output_rows": 100000,
+        "numeric_columns": 1,
+        "samples_seconds": [
+          0.016364957904443145,
+          0.015849333023652434,
+          0.015897250035777688
+        ],
+        "median_seconds": 0.015897250035777688,
+        "setup_seconds": 0.03517787507735193,
+        "peak_rss_mib": 164.203125,
+        "checksum": 59865.614636411905,
+        "nan_count": 19
+      }
+    },
+    {
+      "case": "window_regression",
+      "speedup": 18.742518128638377,
+      "python": {
+        "case": "window_regression",
+        "backend": "python",
+        "rows": 100000,
+        "output_rows": 100000,
+        "numeric_columns": 1,
+        "samples_seconds": [
+          0.14947549998760223,
+          0.14821704104542732,
+          0.15105658292304724
+        ],
+        "median_seconds": 0.14947549998760223,
+        "setup_seconds": 0.09900283301249146,
+        "peak_rss_mib": 195.859375,
+        "checksum": -0.3121135684824565,
+        "nan_count": 19
+      },
+      "cpp": {
+        "case": "window_regression",
+        "backend": "cpp",
+        "rows": 100000,
+        "output_rows": 100000,
+        "numeric_columns": 1,
+        "samples_seconds": [
+          0.007975209038704634,
+          0.007746082963421941,
+          0.007983833085745573
+        ],
+        "median_seconds": 0.007975209038704634,
+        "setup_seconds": 0.01074458402581513,
+        "peak_rss_mib": 163.875,
+        "checksum": -0.3121135684824569,
+        "nan_count": 19
+      }
+    },
+    {
+      "case": "window_sample_entropy",
+      "speedup": 153.31333580575085,
+      "python": {
+        "case": "window_sample_entropy",
+        "backend": "python",
+        "rows": 100000,
+        "output_rows": 100000,
+        "numeric_columns": 1,
+        "samples_seconds": [
+          4.3848763750866055,
+          4.50064724998083,
+          4.301483832998201
+        ],
+        "median_seconds": 4.3848763750866055,
+        "setup_seconds": 0.015940209035761654,
+        "peak_rss_mib": 162.796875,
+        "checksum": 73815.91595660556,
+        "nan_count": 18173
+      },
+      "cpp": {
+        "case": "window_sample_entropy",
+        "backend": "cpp",
+        "rows": 100000,
+        "output_rows": 100000,
+        "numeric_columns": 1,
+        "samples_seconds": [
+          0.02941895800177008,
+          0.028600749908946455,
+          0.02813849993981421
+        ],
+        "median_seconds": 0.028600749908946455,
+        "setup_seconds": 0.011719458037987351,
+        "peak_rss_mib": 162.8125,
+        "checksum": 73815.91595660556,
+        "nan_count": 18173
+      }
+    },
+    {
+      "case": "enriched_group",
+      "speedup": 10.081475737263144,
+      "python": {
+        "case": "enriched_group",
+        "backend": "python",
+        "rows": 100000,
+        "output_rows": 3333,
+        "numeric_columns": 292,
+        "samples_seconds": [
+          5.610719375079498,
+          5.5431181660387665,
+          5.567023666924797
+        ],
+        "median_seconds": 5.567023666924797,
+        "setup_seconds": 0.0363999999826774,
+        "peak_rss_mib": 310.265625,
+        "checksum": 140280237.46391118,
+        "nan_count": 14979
+      },
+      "cpp": {
+        "case": "enriched_group",
+        "backend": "cpp",
+        "rows": 100000,
+        "output_rows": 3333,
+        "numeric_columns": 292,
+        "samples_seconds": [
+          0.5522032500011846,
+          0.5573738339589909,
+          0.550437125028111
+        ],
+        "median_seconds": 0.5522032500011846,
+        "setup_seconds": 0.09347237495239824,
+        "peak_rss_mib": 214.703125,
+        "checksum": 140280237.46391118,
+        "nan_count": 14979
+      }
+    }
+  ],
+  "method": "Sequential fresh processes; median after warmup; API validation included; no I/O"
+}
