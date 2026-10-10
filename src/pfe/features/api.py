@@ -225,6 +225,21 @@ def feature_catalog(features: pd.DataFrame | None = None) -> pd.DataFrame:
         {"name": group, "family": group, "description": "Enriched bar feature family"}
         for group in ("path", "profile", "quality")
     )
+    from pfe.features.linear import LINEAR_FEATURE_GROUPS
+    from pfe.features.macro import MACRO_FEATURE_GROUPS
+
+    records.extend(
+        {"name": f"linear.{group}", "family": "linear", "description": "Walk-forward model outputs"}
+        for group in LINEAR_FEATURE_GROUPS
+    )
+    records.extend(
+        {
+            "name": f"macro.{group}",
+            "family": "macro",
+            "description": "Availability-aware macro inputs",
+        }
+        for group in MACRO_FEATURE_GROUPS
+    )
     for family, names in talib.get_function_groups().items():
         if family in {"Math Operators", "Math Transform"}:
             continue

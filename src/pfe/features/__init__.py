@@ -9,6 +9,16 @@ from pfe.features.api import (
     multi_timeframe_features,
 )
 from pfe.features.backend import feature_backend
+from pfe.features.linear import (
+    LINEAR_FEATURE_GROUPS,
+    compute_linear_feature,
+    compute_linear_features,
+)
+from pfe.features.macro import (
+    MACRO_FEATURE_GROUPS,
+    compute_macro_feature,
+    compute_macro_features,
+)
 from pfe.features.profiles import price_time_profile
 from pfe.features.selected import compute_feature, compute_selected_features
 from pfe.features.streaming import iter_features
@@ -17,11 +27,17 @@ from pfe.features.transforms import transform_features
 
 __all__ = [
     "FEATURE_GROUPS",
+    "LINEAR_FEATURE_GROUPS",
+    "MACRO_FEATURE_GROUPS",
     "aggregate_selected_features",
     "build_features",
     "compute_features",
     "compute_feature",
     "compute_selected_features",
+    "compute_linear_feature",
+    "compute_linear_features",
+    "compute_macro_feature",
+    "compute_macro_features",
     "enrich_bars",
     "feature_catalog",
     "feature_backend",
