@@ -1,0 +1,48 @@
+{
+  "python": "3.12.14",
+  "numpy": "2.3.5",
+  "pandas": "2.3.3",
+  "system": "macOS-26.5.1-arm64-arm-64bit",
+  "rows": 100000,
+  "repeat": 3,
+  "train_window": 500,
+  "horizon": 5,
+  "model": "ridge",
+  "predictors": 3,
+  "method": "Median after warmup; input creation and I/O excluded; API included",
+  "results": [
+    {
+      "case": "prediction_only",
+      "refit_every": 20,
+      "columns": 1,
+      "samples_seconds": [
+        0.2993617909960449,
+        0.29411637503653765,
+        0.2927905839169398
+      ],
+      "median_seconds": 0.29411637503653765
+    },
+    {
+      "case": "all_outputs",
+      "refit_every": 20,
+      "columns": 11,
+      "samples_seconds": [
+        0.33261045906692743,
+        0.3292069169692695,
+        0.32686145801562816
+      ],
+      "median_seconds": 0.3292069169692695
+    },
+    {
+      "case": "prediction_refit_each_bar",
+      "refit_every": 1,
+      "columns": 1,
+      "samples_seconds": [
+        5.727416499983519,
+        5.8630239169579,
+        5.941754083964042
+      ],
+      "median_seconds": 5.8630239169579
+    }
+  ]
+}

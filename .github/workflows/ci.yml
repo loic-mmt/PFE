@@ -20,5 +20,7 @@ jobs:
       - run: uv run --no-sync pytest
       - run: uv run --no-sync python examples/quickstart.py
       - run: uv run --no-sync python examples/features.py
+      - run: uv run --no-sync python examples/linear_features.py
+      - run: uv run --no-sync python examples/macro_features.py
       - run: MPLBACKEND=Agg uv run --no-sync python examples/plots.py
       - run: uv build

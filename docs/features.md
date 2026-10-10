@@ -65,6 +65,17 @@ confirmed pivot tolerance use `structure_threshold=.01` by default. These
 definitions are programmable conventions; discretionary visual patterns are
 not uniquely defined by their names. Signals never get backdated to pivots.
 
+## Linear-model outputs
+
+Walk-forward OLS/Ridge outputs use the separate `compute_linear_feature` /
+`compute_linear_features` APIs, with prediction, fit, coefficients and errors
+groups. See [linear-model features](linear.md) for the catalog and label timing.
+
+External macro observations and announcement calendars use `compute_macro_feature`
+and `compute_macro_features`. Groups cover series, calendar, surprises and ordered
+spreads. See [macro data and features](macro.md) for schemas and release availability.
+They do not add model fitting to ordinary OHLCV group calls.
+
 ## Intrabar groups
 
 | Prefix | Preserved internal information |

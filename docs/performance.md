@@ -1,5 +1,18 @@
 # Calcul ciblé et grands volumes
 
+Les sorties OLS/Ridge disposent d'une [API dédiée](linear.md) : un fit partagé par
+horizon, prédictions vectorisées entre fits, diagnostics calculés à la demande.
+Voir [les mesures brutes](benchmarks/linear.json). Ces appels conservent les
+DataFrames d'entrée/sortie ; leur état de modèle n'est pas encore exposé en streaming.
+
+Les [features macro](macro.md) transforment seulement les observations macro,
+puis les alignent par recherches vectorisées sur les closes. Temporaires limités
+à 262 144 lignes ; un nom sélectionné ne calcule pas les autres sorties du groupe.
+Reproduction hors réseau : `python scripts/benchmark_macro.py --rows 100000 --repeat 3`.
+Voir [les mesures et la mémoire des sorties](benchmarks/macro.json). La taille des
+résultats reste proportionnelle aux lignes × features ; traiter les bougies par
+lots en conservant le même historique macro pour obtenir les mêmes résultats.
+
 L'API par groupes reste disponible : `compute_features(..., groups=...)`,
 `enrich_bars(...)` et `build_features(..., groups=...)` gardent leur comportement.
 Le calcul indépendant est une API supplémentaire.

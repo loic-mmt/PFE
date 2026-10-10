@@ -19,6 +19,8 @@ build:
 example:
 	uv run python examples/quickstart.py
 	uv run python examples/features.py
+	uv run python examples/linear_features.py
+	uv run python examples/macro_features.py
 
 plots:
 	uv run --extra plots python examples/plots.py

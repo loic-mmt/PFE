@@ -67,6 +67,98 @@ alignment. Windows in `build_features` count **target candles**.
 Indexes label opens; features become usable at close (`available_at` on enriched
 frames). Warm-up values stay NaN, and rolling state resets across gaps by default.
 
+## Linear-model features
+
+OLS/Ridge forecasts trained on rolling windows, using only labels already known
+at each bar close. Select individual outputs or groups:
+
+```python
+from pfe import compute_linear_feature, compute_linear_features
+
+prediction = compute_linear_feature(bars, "linear.prediction_h5", train_window=250, refit_every=20)
+models = compute_linear_features(
+    bars, horizons=(5, 15), groups=("prediction", "coefficients"), model="ridge", alpha=1.0
+)
+```
+
+### `linear.prediction`
+
+| Features | Meaning |
+|---|---|
+| Prediction, scaled prediction | Future log-return forecast; optionally divided by training RMSE |
+
+### `linear.fit`
+
+| Features | Meaning |
+|---|---|
+| Training RMSE/R², sample count, model age | Diagnostics and refit history |
+
+### `linear.coefficients`
+
+| Features | Meaning |
+|---|---|
+| Intercept, per-predictor coefficients | Model parameters in original input units |
+
+### `linear.errors`
+
+| Features | Meaning |
+|---|---|
+| Realized error | Original forecast error, emitted only once its horizon has elapsed |
+
+Horizons count input bars; predictors can be feature names or a precomputed
+DataFrame. Normalization uses training data only. See [configuration, timing and
+examples](docs/linear.md). Existing OHLCV/intrabar APIs remain available below.
+
+## Macro features
+
+Small LSE samples, no bulk exports (100 rows/query and 1 MiB output cap by default):
+
+```bash
+uv run --extra lse --env-file .env python scripts/download_macro.py \
+  --series fdtr cpi_yoy --calendar --start 2025-01-01 --end 2025-01-08 --limit 20
+```
+
+```python
+from pfe import load_macro, compute_macro_feature, compute_macro_features
+
+data = load_macro("data/raw/lse/macro/sample.json")
+inflation = compute_macro_feature(bars, "macro.cpi_yoy.level", observations=data.series)
+macro = compute_macro_features(
+    bars, observations=data.series, events=data.calendar, groups=("series", "calendar")
+)
+```
+
+### `macro.series`
+
+| Features | Meaning |
+|---|---|
+| Level, change, percentage change, revisions, ages | Latest known observation and provenance |
+| Rolling mean/std/z-score/slope | Windows of distinct macro reference periods |
+
+### `macro.calendar`
+
+| Features | Meaning |
+|---|---|
+| Time to/from announcements, upcoming/recent counts, exact-time event count | Schedules known at the bar close |
+
+### `macro.surprise`
+
+| Features | Meaning |
+|---|---|
+| Actual/forecast/previous, surprise, relative surprise, actual change | Values emitted after their inputs become available |
+| Surprise z-score, receipt age, provenance | Historical surprise scale and availability |
+
+### `macro.spreads`
+
+| Features | Meaning |
+|---|---|
+| Spread, ratio | Ordered pairs of independently aligned series in compatible units |
+
+LSE latest snapshots lack historical publication/vintage timestamps. The loader
+uses **receipt time**, so they cannot fill earlier historical bars. Verified
+historical releases use explicit `available_at` inputs. See [schemas, exact names
+and timing](docs/macro.md), or run `python examples/macro_features.py` offline.
+
 ## OHLCV feature groups
 
 Tables summarize families. Use `feature_catalog(result)` for exact output names

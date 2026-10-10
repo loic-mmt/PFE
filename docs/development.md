@@ -46,8 +46,14 @@ bars also have hand-computed volatility and availability tests.
 
 The downloader accepts one LSE ticker per run; QQQ remains the default example.
 Feature input always contains a single instrument. Source frequency can
-be finer than one minute. True exchange calendars, labels, backtests, and model
-training remain outside the package. Dependencies use TA-Lib for its native
+be finer than one minute. True exchange calendars, backtests, and general model
+training pipelines remain outside the package. The dedicated linear feature API
+fits OLS/Ridge on matured rolling labels; see `linear.md` for timing and output
+selection. Forward targets stay internal and are never exported as features.
+Macro inputs use explicit vintage/schedule availability and dedicated selected/group
+APIs; see `macro.md`. Their downloader is bounded and the offline example uses
+synthetic observations. Network/provider data stays outside tests and Git.
+Dependencies use TA-Lib for its native
 indicator/pattern implementations, SciPy for sample entropy distances and
 PyWavelets for finite-window Haar coefficients. NumPy is constrained below 2.4
 for pandas 2.x timedelta compatibility and tested together through `uv.lock`.
