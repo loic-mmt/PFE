@@ -90,6 +90,7 @@ from pfe.data.classifications import (
     classifications_asof,
     normalize_classifications,
 )
+from pfe.data.conflicts import UCDPQuery, collect_ucdp, normalize_conflict_observations, parse_ucdp
 from pfe.data.cot import (
     COT_DATASETS,
     COTQuery,
@@ -162,6 +163,7 @@ from pfe.data.option_archive import (
 from pfe.data.options import (
     option_data_from_payload,
 )
+from pfe.data.politics import normalize_political_history, us_election_calendar
 from pfe.data.security_sources import (
     SECURITIES_URLS,
     SecurityCollection,
@@ -192,6 +194,7 @@ from pfe.datasets import (
     save_model_dataset,
     temporal_split,
 )
+from pfe.datasets.context import context_feature_observations
 from pfe.datasets.graph import (
     GraphDataset,
     build_graph_dataset,
@@ -232,24 +235,30 @@ from pfe.extraction import (
     validate_fact,
 )
 from pfe.features import (
+    CALENDAR_FEATURE_NAMES,
     FEATURE_GROUPS,
     LINEAR_FEATURE_GROUPS,
     MACRO_FEATURE_GROUPS,
     OPTION_FEATURE_GROUPS,
     REFERENCE_FEATURE_GROUPS,
+    ConflictFeatureLimits,
     aggregate_selected_features,
     build_features,
+    compute_calendar_features,
+    compute_conflict_features,
     compute_daily_features,
     compute_feature,
     compute_features,
     compute_fundamental_feature,
     compute_fundamental_features,
+    compute_graph_conflict_features,
     compute_linear_feature,
     compute_linear_features,
     compute_macro_feature,
     compute_macro_features,
     compute_option_feature,
     compute_option_features,
+    compute_political_features,
     compute_reference_feature,
     compute_reference_features,
     compute_selected_features,
@@ -305,6 +314,19 @@ from pfe.plots import (
 )
 
 __all__ = [
+    "context_feature_observations",
+    "UCDPQuery",
+    "collect_ucdp",
+    "parse_ucdp",
+    "normalize_conflict_observations",
+    "normalize_political_history",
+    "us_election_calendar",
+    "CALENDAR_FEATURE_NAMES",
+    "compute_calendar_features",
+    "compute_political_features",
+    "ConflictFeatureLimits",
+    "compute_conflict_features",
+    "compute_graph_conflict_features",
     "bind_graph_observations",
     "entity_registry_from_security_master",
     "import_graph_relations",

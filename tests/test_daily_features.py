@@ -130,9 +130,8 @@ def test_partial_bars_masked_until_explicit_opt_in_and_all_missing_schema(calend
 def test_no_synthetic_calendar_features_and_no_implicit_convention_change(calendar):
     raw = rows(calendar)
     for options in (
-        dict(groups=("calendar",)),
         dict(names="session.progress"),
-        dict(names="calendar.weekday"),
+        dict(names="calendar.hour_sin"),
     ):
         with pytest.raises(ValueError, match="intraday"):
             compute_daily_features(raw, schedule=calendar, **options)

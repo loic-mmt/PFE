@@ -8,6 +8,7 @@ from pfe.data.contracts import _instant
 from pfe.data.daily import normalize_daily_bars
 from pfe.data.sessions import normalize_session_schedule
 from pfe.features.api import FEATURE_GROUPS, compute_features
+from pfe.features.calendar import CALENDAR_FEATURE_NAMES, compute_calendar_features
 
 
 def compute_daily_features(
@@ -22,6 +23,7 @@ def compute_daily_features(
     allow_partial=False,
     include_masks=True,
     structure_threshold=0.01,
+    calendar_timezone="America/New_York",
 ):
     """Return metadata/masks and OHLCV indicators per instrument/exchange session.
 
@@ -33,9 +35,9 @@ def compute_daily_features(
     finite partial aggregated bars when the caller explicitly opts in.
 
     An internal ordinal UTC index is used solely for the existing price kernels.
-    It is never returned or treated as a real timestamp. Intraday calendar/session
-    indicators are excluded and cannot be requested, since their clock semantics
-    do not apply to daily sessions. All real calendar and availability columns are
+    It is never returned or treated as a real timestamp. Intraday clock/session
+    indicators are excluded; civil calendar features use actual session dates.
+    All real calendar and availability columns are
     retained. No cross-instrument state or implicit adjustment/currency conversion.
 
     bar_available_at retains input availability; available_at for derived features
@@ -43,7 +45,8 @@ def compute_daily_features(
     An old bar received late therefore cannot contaminate an earlier decision.
     decision_at optionally removes not-yet-known bars before calculation. Resolve
     daily source revisions upstream; this wrapper accepts one row per session,
-    not a replay of all historical feature vintages.
+    not a replay of all historical feature vintages. Civil calendar features
+    use real session_date labels; the ordinal index is only for price kernels.
 
     mask.<feature> records known/NaN outputs, including warm-up. Ages in seconds
     are evaluated at decision_at when supplied, otherwise at feature availability:
@@ -61,20 +64,28 @@ def compute_daily_features(
         raise ValueError("Choose groups or exact names, not both")
     if names is not None:
         names = (names,) if isinstance(names, str) else tuple(names)
-        if any(
-            isinstance(name, str) and name.startswith(("calendar.", "session.")) for name in names
+        if (
+            not names
+            or any(not isinstance(name, str) or not name for name in names)
+            or len(set(names)) != len(names)
         ):
+            raise ValueError("Select distinct daily feature names")
+        if any(isinstance(name, str) and name.startswith("session.") for name in names):
             raise ValueError("Daily features do not expose intraday calendar/session indicators")
+        civil_names = tuple(name for name in names if name.startswith("calendar."))
+        if set(civil_names) - set(CALENDAR_FEATURE_NAMES):
+            raise ValueError("Daily features do not expose intraday calendar/session indicators")
+        price_names = tuple(name for name in names if name not in civil_names)
+        price_groups = () if not price_names else None
     else:
         if isinstance(groups, str):
             raise ValueError("groups must be an iterable of names")
-        groups = (
-            tuple(group for group in FEATURE_GROUPS if group != "calendar")
-            if groups is None
-            else tuple(groups)
-        )
-        if "calendar" in groups or "session" in groups:
+        groups = FEATURE_GROUPS if groups is None else tuple(groups)
+        if "session" in groups:
             raise ValueError("Daily features do not expose intraday calendar/session indicators")
+        civil_names = CALENDAR_FEATURE_NAMES if "calendar" in groups else ()
+        price_names = None
+        price_groups = tuple(group for group in groups if group != "calendar")
     calendar = normalize_session_schedule(schedule)
     out = normalize_daily_bars(frame, schedule=calendar, availability_basis="unknown")
     if decision_at is not None:
@@ -104,8 +115,8 @@ def compute_daily_features(
             schema = compute_features(
                 bars,
                 windows=windows,
-                groups=groups,
-                names=names,
+                groups=price_groups,
+                names=price_names or None,
                 source_frequency="1d",
                 structure_threshold=structure_threshold,
             )
@@ -117,14 +128,23 @@ def compute_daily_features(
             features = compute_features(
                 bars,
                 windows=windows,
-                groups=groups,
-                names=names,
+                groups=price_groups,
+                names=price_names or None,
                 source_frequency="1d",
                 gap_policy=gap_policy,
                 structure_threshold=structure_threshold,
             )
             features.index = known.index
             features = features.reindex(instrument.index)
+        if civil_names:
+            civil = compute_calendar_features(
+                instrument.session_open,
+                timezone=calendar_timezone,
+                session_dates=instrument.session_date.tolist(),
+                schedule=calendar,
+            ).loc[:, civil_names]
+            civil.index = instrument.index
+            features = pd.concat([features, civil], axis=1)
         instrument["available_at"] = instrument.bar_available_at.cummax()
         evaluation = (
             pd.Series(_instant(decision_at, "decision_at"), index=instrument.index)
@@ -155,7 +175,7 @@ def compute_daily_features(
         available_at="maximum known availability of chronological instrument prefix",
         window_units="exchange_sessions",
         gap_policy=gap_policy,
-        excluded_groups=("calendar",),
+        excluded_groups=("intraday_session",),
         calendar=calendar.attrs.get("calendar", "injected"),
     )
     return result

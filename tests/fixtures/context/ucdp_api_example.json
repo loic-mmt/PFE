@@ -1,0 +1,21 @@
+{
+  "fixture_origin": "Official API documentation example, field subset; not a live API capture",
+  "source_url": "https://ucdp.uu.se/apidocs/index.html",
+  "TotalCount": 417968,
+  "TotalPages": 417968,
+  "Result": [
+    {
+      "id": 4,
+      "conflict_new_id": 230,
+      "country": "Yemen (North Yemen)",
+      "country_id": 678,
+      "region": "Middle East",
+      "type_of_violence": 1,
+      "date_start": "2010-09-25",
+      "date_end": "2010-09-25",
+      "best": 2,
+      "high": 2,
+      "low": 2
+    }
+  ]
+}

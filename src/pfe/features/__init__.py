@@ -9,6 +9,12 @@ from pfe.features.api import (
     multi_timeframe_features,
 )
 from pfe.features.backend import feature_backend
+from pfe.features.calendar import CALENDAR_FEATURE_NAMES, compute_calendar_features
+from pfe.features.conflicts import (
+    ConflictFeatureLimits,
+    compute_conflict_features,
+    compute_graph_conflict_features,
+)
 from pfe.features.cot import (
     compute_cot_features,
 )
@@ -52,6 +58,7 @@ from pfe.features.options import (
     compute_option_feature,
     compute_option_features,
 )
+from pfe.features.politics import compute_political_features
 from pfe.features.profiles import price_time_profile
 from pfe.features.reference import (
     REFERENCE_FEATURE_GROUPS,
@@ -65,6 +72,12 @@ from pfe.features.targeted import aggregate_selected_features
 from pfe.features.transforms import transform_features
 
 __all__ = [
+    "CALENDAR_FEATURE_NAMES",
+    "compute_calendar_features",
+    "compute_political_features",
+    "ConflictFeatureLimits",
+    "compute_conflict_features",
+    "compute_graph_conflict_features",
     "GraphFeatureLimits",
     "compute_graph_pair_features",
     "compute_cross_sectional_features",

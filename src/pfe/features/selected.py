@@ -12,6 +12,7 @@ from pfe.features._plan import Planner
 from pfe.features._utils import validate_windows
 from pfe.features.aggregation import fixed_duration
 from pfe.features.backend import native, using_cpp
+from pfe.features.calendar import CALENDAR_FEATURE_NAMES, compute_calendar_features
 from pfe.features.complexity import describe_window
 from pfe.features.rolling import COMPLEXITY_CPP
 from pfe.features.sessions import session_features
@@ -300,9 +301,11 @@ def compute_selected_features(
         ).items()
     )
     native = _native_catalog(windows)
-    tasks, native_names, complexity_names = {}, {}, []
+    tasks, native_names, complexity_names, calendar_names = {}, {}, [], []
     for name in names:
-        if name in native:
+        if name in CALENDAR_FEATURE_NAMES:
+            calendar_names.append(name)
+        elif name in native:
             native_names[name] = native[name]
         elif name.startswith("complexity."):
             complexity_names.append(name)
@@ -365,6 +368,9 @@ def compute_selected_features(
     for plan in session_plans:
         for name, value in plan.evaluate(tasks[plan], bars=data).items():
             output[name] = np.asarray(value, dtype=float)
+    if calendar_names:
+        civil = compute_calendar_features(data.index, timezone=session_timezone)
+        output.update({name: civil[name].to_numpy(dtype=float) for name in calendar_names})
     for values in output.values():
         for left in range(0, len(values), 100_000):
             block = values[left : left + 100_000]

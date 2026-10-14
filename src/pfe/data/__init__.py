@@ -18,6 +18,7 @@ from pfe.data.classifications import (
     classifications_asof,
     normalize_classifications,
 )
+from pfe.data.conflicts import UCDPQuery, collect_ucdp, normalize_conflict_observations, parse_ucdp
 from pfe.data.contracts import OBSERVATION_COLUMNS, normalize_observations, observations_asof
 from pfe.data.corporate_actions import (
     ACTION_COLUMNS,
@@ -129,6 +130,7 @@ from pfe.data.options import (
     normalize_option_flow,
     option_data_from_payload,
 )
+from pfe.data.politics import normalize_political_history, us_election_calendar
 from pfe.data.qualification import (
     REQUIREMENTS as LSE_REQUIREMENTS,
 )
@@ -185,6 +187,12 @@ from pfe.data.world_bank import (
 )
 
 __all__ = [
+    "UCDPQuery",
+    "collect_ucdp",
+    "parse_ucdp",
+    "normalize_conflict_observations",
+    "normalize_political_history",
+    "us_election_calendar",
     "bind_graph_observations",
     "entity_registry_from_security_master",
     "import_graph_relations",

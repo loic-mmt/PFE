@@ -294,7 +294,9 @@ def default_source_registry():
 
     for source_id in INTERNATIONAL_SOURCES:
         registry.register(international_source_record(source_id))
+    from pfe.data.conflicts import ucdp_source_record
     from pfe.data.cot import cot_source_record
 
     registry.register(cot_source_record())
+    registry.register(ucdp_source_record())
     return registry

@@ -10,6 +10,7 @@ from talib import abstract
 from pfe.data import normalize_bars
 from pfe.features._utils import validate_windows
 from pfe.features.aggregation import enrich_bars, fixed_duration
+from pfe.features.calendar import compute_calendar_features
 from pfe.features.complexity import complexity_features
 from pfe.features.sessions import session_features
 from pfe.features.standard import standard_features
@@ -124,6 +125,9 @@ def compute_features(
             ),
             index=data.index,
         )
+        civil = compute_calendar_features(data.index, timezone=session_timezone)
+        for name in civil:
+            calendar[name] = civil[name].to_numpy()
         result = pd.concat([result, calendar], axis=1)
     result = result.replace([np.inf, -np.inf], np.nan)
     if not result.columns.is_unique:
@@ -303,6 +307,16 @@ def feature_catalog(features: pd.DataFrame | None = None) -> pd.DataFrame:
                 "name": "estimates",
                 "family": "estimates",
                 "description": "Licensed comparable estimates and pre-announcement surprises",
+            },
+            {
+                "name": "politics",
+                "family": "politics",
+                "description": "US electoral calendar and known presidency/Congress histories",
+            },
+            {
+                "name": "conflicts",
+                "family": "conflicts",
+                "description": "Known conflict activity and separately published annual war status",
             },
         ]
     )

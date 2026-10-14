@@ -1,5 +1,6 @@
 """Framework-independent model inputs, chronological splits and artifacts."""
 
+from pfe.datasets.context import context_feature_observations
 from pfe.datasets.core import (
     DatasetLimits,
     FeaturePanel,
@@ -49,6 +50,7 @@ from pfe.datasets.timeframes import (
 )
 
 __all__ = [
+    "context_feature_observations",
     "GraphDataset",
     "build_graph_dataset",
     "graph_entity_ids",

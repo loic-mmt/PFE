@@ -461,6 +461,17 @@ def _collect(parameters, inputs, context):
             result.issues,
             dict(collection_id=result.collection_id),
         )
+    elif kind == "ucdp":
+        from pfe.data.captures import CaptureLimits
+        from pfe.data.conflicts import collect_ucdp
+
+        options["limits"] = CaptureLimits(**options.get("limits", {}))
+        result = collect_ucdp(
+            store=context.store,
+            api_token=os.environ.get("UCDP_API_TOKEN"),
+            transport=context.transport("ucdp", hosts=["ucdpapi.pcr.uu.se"]),
+            **options,
+        )
     else:
         raise ValueError("Unsupported registered source collector")
     return StageResult(
@@ -502,7 +513,19 @@ def _financial(parameters, inputs, context):
 
 def default_pipeline_handlers():
     return {
-        name: PipelineHandler(function, "immediate-v1")
+        name: PipelineHandler(
+            function,
+            "calendar-context-v2"
+            if name
+            in {
+                "calendar_features",
+                "political_features",
+                "conflict_features",
+                "graph_conflict_features",
+                "timeframes",
+            }
+            else "immediate-v1",
+        )
         for name, function in (
             ("local_tables", _local_tables),
             ("merge_observations", _merge),
@@ -515,6 +538,10 @@ def default_pipeline_handlers():
             ("graph_features", _graph_features),
             ("graph_pairs", _graph_pairs),
             ("graph_dataset", _graph_dataset),
+            ("calendar_features", _calendar_features),
+            ("political_features", _political_features),
+            ("conflict_features", _conflict_features),
+            ("graph_conflict_features", _graph_conflict_features),
         )
     }
 
@@ -748,3 +775,68 @@ def _graph_pairs(parameters, inputs, context):
         **parameters.get("options", {}),
     )
     return StageResult({"pairs": pairs})
+
+
+def _context_result(frame, parameters):
+    from pfe.datasets.context import context_feature_observations
+
+    tables = {"features": frame}
+    if "observation_options" in parameters:
+        tables["observations"] = context_feature_observations(
+            frame, **parameters["observation_options"]
+        )
+    return StageResult(tables, provenance=dict(semantics=frame.attrs))
+
+
+def _calendar_features(parameters, inputs, context):
+    from pfe.features.calendar import compute_calendar_features
+
+    options = parameters.get("options", {}).copy()
+    if "schedule" in parameters:
+        options["schedule"] = _table_reference(inputs, parameters["schedule"])
+    return _context_result(
+        compute_calendar_features(parameters["decisions"], **options), parameters
+    )
+
+
+def _political_features(parameters, inputs, context):
+    from pfe.features.politics import compute_political_features
+
+    history = _table_reference(inputs, parameters["history"]) if "history" in parameters else None
+    return _context_result(
+        compute_political_features(
+            parameters["decisions"], history=history, **parameters.get("options", {})
+        ),
+        parameters,
+    )
+
+
+def _conflict_features(parameters, inputs, context):
+    from pfe.features.conflicts import compute_conflict_features
+
+    return _context_result(
+        compute_conflict_features(
+            parameters["decisions"],
+            _table_reference(inputs, parameters["observations"]),
+            **parameters.get("options", {}),
+        ),
+        parameters,
+    )
+
+
+def _graph_conflict_features(parameters, inputs, context):
+    from pfe.features.conflicts import compute_graph_conflict_features
+
+    options = parameters.get("options", {}).copy()
+    mapping = parameters["country_nodes"]
+    # JSON object keys are strings; only this explicit declared mapping is converted.
+    mapping = {int(key): value for key, value in mapping.items()}
+    frame = compute_graph_conflict_features(
+        parameters["decisions"],
+        _table_reference(inputs, parameters["observations"]),
+        _graph_history(inputs, parameters["history"]),
+        entity_ids=parameters["entity_ids"],
+        country_nodes=mapping,
+        **options,
+    )
+    return _context_result(frame, parameters)
