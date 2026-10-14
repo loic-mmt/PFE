@@ -1,0 +1,16 @@
+{
+  "relationship_id": "tsmc-nvidia-blackwell-4np-2024",
+  "company_id": "company:tsmc",
+  "related_entity_id": "company:nvidia",
+  "relation_type": "manufacturer",
+  "source_id": "nvidia_newsroom",
+  "revision_id": "reviewed-excerpt-20261014",
+  "available_at": "2026-10-14T16:08:22Z",
+  "source_document_id": "nvidia:blackwell-release:2024-03-18",
+  "source_url": "https://nvidianews.nvidia.com/news/nvidia-blackwell-platform-arrives-to-power-a-new-era-of-computing/",
+  "published_date": "2024-03-18",
+  "evidence_quote": "Blackwell-architecture GPUs are manufactured using a custom-built 4NP TSMC process",
+  "qualification_reference": "manual-check-official-release-20261014:manufacturer-and-product-only",
+  "weight_scope": "Blackwell GPUs / 4NP",
+  "point_in_time": false
+}

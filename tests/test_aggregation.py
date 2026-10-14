@@ -80,6 +80,22 @@ def test_subminute_source_and_arbitrary_multiple():
     assert f["quality.expected_bars"].eq(3).all()
 
 
+@pytest.mark.parametrize("unit", ["s", "ms", "us"])
+def test_group_and_aggregation_accept_coarser_datetime_storage(unit):
+    from pfe import compute_feature, compute_features
+
+    bars = make_bars([100, 101, 102, 101, 100, 101])
+    coarse = bars.copy()
+    coarse.index = coarse.index.as_unit(unit)
+    expected = compute_features(bars, groups=("returns",), windows=(2,))
+    assert_frame_equal(compute_features(coarse, groups=("returns",), windows=(2,)), expected)
+    np.testing.assert_allclose(
+        compute_feature(coarse, "returns.simple"), expected["returns.simple"], equal_nan=True
+    )
+    options = dict(origin=bars.index[0], internal_scales=(1,))
+    assert_frame_equal(enrich_bars(coarse, "3min", **options), enrich_bars(bars, "3min", **options))
+
+
 def test_gaps_are_reported_without_inventing_realized_volatility():
     b = make_bars([100, 101, 102, 103, 104, 105])
     b = b.drop(b.index[2])

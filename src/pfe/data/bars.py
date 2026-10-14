@@ -21,7 +21,8 @@ def normalize_bars(
     Accept a timestamp column or a DatetimeIndex. Naive timestamps require an
     explicit source timezone. Numeric epochs are rejected: convert their units
     explicitly before calling. Gaps are preserved; no resampling or filling.
-    Input data is never mutated. Additional columns are discarded.
+    Input data is never mutated. Additional columns are discarded. The UTC index
+    uses nanoseconds so downstream integer time arithmetic has a fixed unit.
     """
     if not frame.columns.is_unique:
         raise ValueError("Column names must be unique")
@@ -46,7 +47,7 @@ def normalize_bars(
         if source_timezone is None:
             raise ValueError("Naive timestamps require source_timezone")
         index = index.tz_localize(source_timezone, ambiguous="raise", nonexistent="raise")
-    index = index.tz_convert("UTC").rename("timestamp")
+    index = index.tz_convert("UTC").as_unit("ns").rename("timestamp")
     if index.has_duplicates:
         raise ValueError("Duplicate bar timestamps")
     step = pd.Timedelta(frequency)

@@ -81,9 +81,11 @@ def _series_history(frame, metrics):
     times, latest_available = [], []
     for row in frame.itertuples(index=False):
         period = row.observation_at.value
-        previous_value = values.get(period)
-        revised = previous_value is not None and previous_value != row.value
-        if previous_value is None:
+        previous_value = values.get(period, np.nan)
+        revised = period in values and not (
+            previous_value == row.value or np.isnan(previous_value) and np.isnan(row.value)
+        )
+        if period not in values:
             insort(periods, period)
         values[period], stamps[period], qualities[period] = (
             row.value,
@@ -237,6 +239,7 @@ def compute_macro_features(
     *,
     observations=None,
     events=None,
+    calendar_history=None,
     names=None,
     groups=None,
     windows=(3, 12),
@@ -271,11 +274,19 @@ def compute_macro_features(
     ):
         raise ValueError("windows must be unique integers >= 2")
     series = normalize_macro_series(observations) if observations is not None else None
+    if events is not None and calendar_history is not None:
+        raise ValueError("Choose events or calendar_history")
+    calendar_versions = None
+    if calendar_history is not None:
+        from pfe.data.macro_calendar import normalize_macro_calendar_history
+
+        calendar_versions = normalize_macro_calendar_history(calendar_history)
     calendar = normalize_macro_calendar(events) if events is not None else None
-    if series is None and calendar is None:
+    if series is None and calendar is None and calendar_versions is None:
         raise ValueError("Provide observations and/or events")
     symbols = tuple(series.series.unique()) if series is not None else ()
-    event_types = tuple(calendar.event.unique()) if calendar is not None else ()
+    calendar_input = calendar_versions if calendar_versions is not None else calendar
+    event_types = tuple(calendar_input.event.unique()) if calendar_input is not None else ()
     catalog = {}
     for symbol in symbols:
         metrics = (
@@ -284,7 +295,7 @@ def compute_macro_features(
         )
         for metric in metrics:
             catalog[f"macro.{symbol}.{metric}"] = ("series", symbol, metric)
-    if calendar is not None:
+    if calendar_input is not None:
         for metric in _CALENDAR:
             catalog[f"macro.calendar.{metric}"] = ("calendar", None, metric)
         for event in event_types:
@@ -339,8 +350,26 @@ def compute_macro_features(
                 age=is_age,
             )
     output = {}
+    if calendar_versions is not None:
+        from pfe.features.macro_calendar import calendar_history_features
+
+        output.update(
+            calendar_history_features(
+                calendar_versions,
+                decisions,
+                {
+                    name: catalog[name]
+                    for name in selected
+                    if catalog[name][0] in ("calendar", "surprise")
+                },
+                window=width,
+                max_age=age_limit,
+            )
+        )
     for name in selected:
         group, key, metric = catalog[name]
+        if calendar_versions is not None and group in ("calendar", "surprise"):
+            continue
         if group == "series":
             output[name] = aligned[key, metric]
         elif group == "calendar":
@@ -364,7 +393,7 @@ def compute_macro_features(
                 result = np.full(len(index), np.nan)
                 np.divide(left, right, out=result, where=right != 0)
                 output[name] = result
-    result = pd.DataFrame(output, index=index, copy=False)
+    result = pd.DataFrame(output, index=index, copy=False).reindex(columns=selected)
     result.attrs.update(
         source_frequency=str(step),
         timestamp_semantics="bar_open",

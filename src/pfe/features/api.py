@@ -212,7 +212,14 @@ def feature_catalog(features: pd.DataFrame | None = None) -> pd.DataFrame:
                     "name": name,
                     "family": family,
                     "dtype": str(features[name].dtype),
-                    "availability": "bar_close",
+                    "availability": (
+                        "explicit decision_at"
+                        if features.attrs.get("timestamp_semantics") == "explicit_decision"
+                        else "explicit available_at"
+                        if features.attrs.get("timestamp_semantics")
+                        in ("exchange_session", "session_open")
+                        else "bar_close"
+                    ),
                     "description": name.replace("_", " "),
                 }
             )
@@ -227,6 +234,8 @@ def feature_catalog(features: pd.DataFrame | None = None) -> pd.DataFrame:
     )
     from pfe.features.linear import LINEAR_FEATURE_GROUPS
     from pfe.features.macro import MACRO_FEATURE_GROUPS
+    from pfe.features.options import OPTION_FEATURE_GROUPS
+    from pfe.features.reference import REFERENCE_FEATURE_GROUPS
 
     records.extend(
         {"name": f"linear.{group}", "family": "linear", "description": "Walk-forward model outputs"}
@@ -239,6 +248,63 @@ def feature_catalog(features: pd.DataFrame | None = None) -> pd.DataFrame:
             "description": "Availability-aware macro inputs",
         }
         for group in MACRO_FEATURE_GROUPS
+    )
+    records.extend(
+        {"name": f"options.{group}", "family": "options", "description": "Observed option inputs"}
+        for group in OPTION_FEATURE_GROUPS
+    )
+    records.extend(
+        {
+            "name": f"reference.{group}",
+            "family": "reference",
+            "description": "Known reference periods and explicitly matched market horizons",
+        }
+        for group in REFERENCE_FEATURE_GROUPS
+    )
+    records.append(
+        {
+            "name": "fundamentals",
+            "family": "fundamentals",
+            "description": "Known reported actuals with compatible accounting periods and units",
+        }
+    )
+    from pfe.features.events import EVENT_FEATURE_GROUPS
+    from pfe.features.graph import GRAPH_FEATURE_GROUPS
+    from pfe.features.international import INTERNATIONAL_FEATURE_GROUPS
+
+    for family, groups in (
+        ("graph", GRAPH_FEATURE_GROUPS),
+        ("events", EVENT_FEATURE_GROUPS),
+        ("international", INTERNATIONAL_FEATURE_GROUPS),
+    ):
+        records.extend(
+            {
+                "name": f"{family}.{group}",
+                "family": family,
+                "description": "Sourced history at explicit decisions, with coverage masks",
+            }
+            for group in groups
+        )
+    records.append(
+        {
+            "name": "statements",
+            "family": "statements",
+            "description": "Reviewed textual actuals/guidance/estimates in original units",
+        }
+    )
+    records.extend(
+        [
+            {
+                "name": "cot",
+                "family": "cot",
+                "description": "Known COT release positioning in compatible reports",
+            },
+            {
+                "name": "estimates",
+                "family": "estimates",
+                "description": "Licensed comparable estimates and pre-announcement surprises",
+            },
+        ]
     )
     for family, names in talib.get_function_groups().items():
         if family in {"Math Operators", "Math Transform"}:

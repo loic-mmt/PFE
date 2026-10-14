@@ -65,7 +65,7 @@ def normalize_macro_series(frame):
         raise ValueError("series must contain non-empty strings")
     for name in ("observation_at", "available_at"):
         out[name] = _timestamps(out[name], name)
-    out["value"] = _numbers(out.value, "value")
+    out["value"] = _numbers(out.value, "value", nullable=True)
     _quality(out)
     if out.duplicated(["series", "observation_at", "available_at"]).any():
         raise ValueError("Duplicate observation vintage")

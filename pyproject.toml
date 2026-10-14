@@ -21,6 +21,8 @@ dependencies = [
 [project.optional-dependencies]
 lse = ["lse-data>=0.14,<0.15"]
 plots = ["matplotlib>=3.9,<4"]
+calendars = ["exchange-calendars>=4.11,<5"]
+commodities = ["openpyxl>=3.1,<4"]
 
 [dependency-groups]
 dev = ["pytest>=8,<10", "ruff>=0.11,<1"]

@@ -53,8 +53,15 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--input", type=Path, required=True, help="CSV or Parquet OHLCV file")
     parser.add_argument("--output", type=Path, required=True, help="Output Parquet file")
-    parser.add_argument("--frequency", required=True, help="Target duration: 7min, 45min, 2h, etc.")
-    parser.add_argument("--source-frequency", default="1min")
+    parser.add_argument("--frequency", help="Intraday target duration; daily accepts only 1d")
+    parser.add_argument("--source-frequency")
+    parser.add_argument(
+        "--daily", action="store_true", help="Use canonical exchange-session daily bars"
+    )
+    parser.add_argument("--calendar", help="Explicit common exchange calendar for daily inputs")
+    parser.add_argument(
+        "--schedule", type=Path, help="Explicit daily schedule CSV/Parquet instead of a calendar"
+    )
     parser.add_argument("--windows", nargs="+", type=int, default=[5, 20, 60])
     parser.add_argument("--groups", nargs="+", choices=FEATURE_GROUPS)
     parser.add_argument(
@@ -80,6 +87,29 @@ def main() -> None:
     )
     parser.add_argument("--overwrite", action="store_true")
     args = parser.parse_args()
+    if not args.daily and not args.frequency:
+        parser.error("Intraday calculation requires --frequency")
+    if args.daily:
+        if args.frequency not in (None, "1d", "1D") or args.source_frequency not in (
+            None,
+            "1d",
+            "1D",
+        ):
+            parser.error(
+                "Daily uses exchange sessions; --frequency/--source-frequency accept only 1d"
+            )
+        if bool(args.calendar) == bool(args.schedule):
+            parser.error("Daily requires exactly one of --calendar or --schedule")
+        if args.batch_size is not None or args.path_only:
+            parser.error(
+                "Daily requires a full canonical input; intrabar path/stream modes unavailable"
+            )
+        if args.origin != "start_day" or args.offset is not None:
+            parser.error(
+                "Daily schedule supplies actual opens/closes; origin/offset cannot be used"
+            )
+    elif args.calendar or args.schedule:
+        parser.error("--calendar/--schedule require --daily")
     if args.features and (args.groups or args.path_only):
         parser.error("Choose --features, --groups or --path-only")
     if args.batch_size is not None and (
@@ -89,17 +119,65 @@ def main() -> None:
     if args.output.suffix.lower() != ".parquet":
         parser.error("--output must end in .parquet")
     outputs = [args.output] + ([args.catalog] if args.catalog else [])
-    if len({path.resolve() for path in [args.input, *outputs]}) != 1 + len(outputs):
-        parser.error("Input, output and catalog must be different paths")
+    inputs = [args.input] + ([args.schedule] if args.schedule else [])
+    if len({path.resolve() for path in [*inputs, *outputs]}) != len(inputs) + len(outputs):
+        parser.error("Input, schedule, output and catalog must be different paths")
     if not args.overwrite and any(path.exists() for path in outputs):
         parser.error("Output already exists; choose a new path or --overwrite")
+    if args.daily:
+        from pfe.data.daily import load_daily_bars
+        from pfe.data.sessions import exchange_schedule, normalize_session_schedule
+        from pfe.features.daily import compute_daily_features
+
+        try:
+            if args.schedule:
+                supplied = (
+                    pd.read_parquet(args.schedule)
+                    if args.schedule.suffix.lower() == ".parquet"
+                    else pd.read_csv(args.schedule)
+                )
+                schedule = normalize_session_schedule(supplied)
+            else:
+                if args.input.suffix.lower() == ".parquet":
+                    labels = pd.read_parquet(args.input, columns=["session_date"])
+                elif args.input.suffix.lower() == ".csv":
+                    labels = pd.read_csv(args.input, usecols=["session_date"], dtype=str)
+                else:
+                    parser.error("Daily input must be .csv or .parquet")
+                if labels.empty:
+                    parser.error(
+                        "Daily input must contain canonical session_date and provenance columns"
+                    )
+                dates = labels.session_date.astype(str)
+                schedule = exchange_schedule(dates.min(), dates.max(), calendar=args.calendar)
+            bars = load_daily_bars(args.input, schedule=schedule)
+            result = compute_daily_features(
+                bars,
+                schedule=schedule,
+                windows=tuple(args.windows),
+                groups=args.groups,
+                names=args.features,
+                gap_policy=args.gap_policy,
+            )
+            if result.empty:
+                parser.error("No daily session bars in the input")
+            count, schema = save_batches([result], args.output)
+            if args.catalog:
+                args.catalog.parent.mkdir(parents=True, exist_ok=True)
+                catalog = feature_catalog(schema)
+                catalog["availability"] = "explicit available_at"
+                catalog.to_csv(args.catalog, index=False)
+            print(f"Saved {count:,} daily bars, {len(schema.columns):,} columns: {args.output}")
+            return
+        except (ValueError, OSError) as error:
+            parser.error(str(error))
     origin = args.origin
     if origin not in {"start_day", "epoch", "start"}:
         origin = pd.Timestamp(origin)
         if origin.tzinfo is None:
             parser.error("Explicit --origin must include a timezone")
     options = dict(
-        source_frequency=args.source_frequency,
+        source_frequency=args.source_frequency or "1min",
         segments=args.segments,
         bins=args.bins,
         origin=origin,

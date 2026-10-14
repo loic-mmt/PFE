@@ -100,3 +100,11 @@ def test_local_file_round_trip(raw_bars, tmp_path, suffix):
 def test_unsupported_file_type(tmp_path):
     with pytest.raises(ValueError, match="csv or .parquet"):
         load_bars(tmp_path / "bars.json")
+
+
+@pytest.mark.parametrize("unit", ["s", "ms", "us", "ns"])
+def test_datetime_resolution_is_canonical_and_preserves_instants(raw_bars, unit):
+    expected = normalize_bars(raw_bars)
+    frame = expected.copy()
+    frame.index = frame.index.as_unit(unit)
+    assert_frame_equal(normalize_bars(frame), expected)
