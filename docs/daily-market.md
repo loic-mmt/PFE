@@ -158,8 +158,10 @@ permet explicitement de la franchir. Les NaN de chauffe restent NaN.
 `allow_partial=True` autorise explicitement des barres partielles finies.
 
 L'index ordinal utilisé par les noyaux est interne ; la sortie conserve les
-dates/heures réelles. Les features d'horloge intraday `calendar.*`/`session.*`
-sont exclues. Les prix sont utilisés dans leur convention déclarée : les
+dates/heures réelles. Le calendrier civil `calendar.*` utilise `session_date`,
+avec mois, semaine ISO, trimestre et cycles ; les horloges `calendar.hour_*` et
+`session.*` sont exclues. Voir [calendrier et contextes](calendar-politics-conflicts.md).
+Les prix sont utilisés dans leur convention déclarée : les
 indicateurs sur prix bruts gardent les effets des splits. Les rendements
 réconciliés ci-dessous sont une sortie distincte à choisir pour les modèles.
 

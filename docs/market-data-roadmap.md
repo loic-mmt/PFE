@@ -613,6 +613,13 @@ repo consommateur ; les lots peuvent se chevaucher sous leurs garanties temporel
 
 ## 10. Limites de l'audit
 
+Extension du 14 octobre 2026 : [calendrier, politique US et conflits](calendar-politics-conflicts.md).
+Calendrier civil multi-timeframe/daily, cycles électoraux, import d'états politiques,
+collecteur UCDP borné, activité connue/classifications annuelles et propagation des
+expositions pays sont implémentés. Les données politiques réelles, token/test UCDP
+live, vintages historiques et crosswalks/expositions qualifiés restent des prérequis
+de données, distincts du code livré.
+
 L'audit initial porte sur le code, les fichiers locaux et la documentation publique. Les
 statistiques sont celles annoncées par les fournisseurs ; volumes réels et droits du
 compte demandent des captures et contrôles dédiés avant intégration. La section 2 et les

@@ -121,6 +121,12 @@ separate edge attributes and partitioned GNN exports are supported. See [graph f
 and data requirements](docs/graph-features.md). `examples/graph_features.py` runs
 entirely offline.
 
+Civil calendar features also cover daily sessions and explicit decision grids.
+US electoral cycles, dated presidency/Congress states, bounded UCDP conflict
+activity/annual war classifications and declared graph country exposures are available.
+See [calendar, politics and conflict inputs](docs/calendar-politics-conflicts.md).
+`examples/calendar_politics_conflicts.py` builds a small feature panel entirely offline.
+
 ## Download data
 
 Copy `.env.example` to `.env` and set `LSE_API_KEY`, then run:

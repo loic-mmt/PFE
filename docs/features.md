@@ -38,7 +38,7 @@ export this inventory as CSV with `--catalog`.
 | `patterns` | All 61 TA-Lib candle patterns, numeric direction/score, age since pattern, trailing frequency |
 | `complexity` | Return/log-price/log-volume distribution tails, historical expected shortfall, entropy, Hurst estimate, Petrosian dimension, AR(1)/lag-2 PACF, FFT frequency/energy/entropy/coefficients, Haar detail energy/coefficients |
 | `structure` | Higher/lower highs/lows, confirmed swing levels/events/ages, tolerance-based double tops/bottoms, slope convergence, consolidation width, confirmed-threshold ZigZag |
-| `calendar` | Local clock encodings, session progress, evolving session levels/volume/VWAP, opening range, same-slot relative volume/movement, previous-session pivots, night/weekend opening gaps |
+| `calendar` | Civil dates, ISO weeks, month/quarter/year cycles, period boundaries; optional exchange-period positions. Intraday adds clocks, evolving session levels/volume/VWAP, opening range, previous-session pivots and night/weekend gaps |
 
 Native TA-Lib extensions implemented here: Wilder RMA, ALMA, HMA, ZLEMA, VIDYA,
 FRAMA, TSI, Vortex, Fisher, SMI, KDJ, Schaff Trend Cycle, Awesome Oscillator,
