@@ -1,0 +1,53 @@
+{
+  "archive_bytes": 142167,
+  "bulk_download": false,
+  "download_bytes": 0,
+  "model_download": false,
+  "requests": 1,
+  "services": {
+    "eia": {
+      "collection_id": "d2713e866fe30d3e36e22d97547ca6deb432d944cbfc06b6121c95bccd03ac44",
+      "complete": true,
+      "replay": true,
+      "rows": 2,
+      "status": "passed"
+    },
+    "estat": {
+      "collection_id": "48d2a398869f82f8e606acddaf858fa8771ed65497f2c8b00a072ab9357115bb",
+      "economic_mapping_qualified": false,
+      "rows": 1,
+      "scope": "authentication_and_one_cell_schema",
+      "status": "passed",
+      "table_id": "0000010103"
+    },
+    "fred": {
+      "error_type": "HTTPTransportError",
+      "status": "failed",
+      "transport_error": "Provider HTTP 500"
+    },
+    "ollama": {
+      "accepted": 0,
+      "complete": true,
+      "model": "qwen2.5:3b-instruct",
+      "model_revision": "357c53fb659c5076de1d65ccb0b397446227b71a42be9d1603d46168015c9e4b",
+      "quality_qualified": false,
+      "rejected": 3,
+      "replay": true,
+      "scope": "synthetic_integration_only",
+      "status": "passed",
+      "tasks": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ]
+    },
+    "opendart": {
+      "collection_id": "de341616c1e174be2189b3181507aab598d3b6c3288c950f551e573ce78b44dc",
+      "complete": true,
+      "replay": true,
+      "rows": 1,
+      "status": "passed"
+    }
+  }
+}

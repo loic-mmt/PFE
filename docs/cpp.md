@@ -1,7 +1,7 @@
 # Noyaux C++ et benchmark
 
-L'API Python et le calcul par groupes restent disponibles. Une installation
-compilée utilise désormais C++ par défaut pour ces parties :
+L'API Python et le calcul par groupes restent disponibles. Une installation compilée
+utilise C++ par défaut pour ces parties :
 
 - reconstruction TPO et tous les descripteurs de profil (POC, value area,
   concentration, transitions, présence par prix/segment…) ;
@@ -12,20 +12,18 @@ compilée utilise désormais C++ par défaut pour ces parties :
 - descripteurs de complexité : sample/permutation/sign entropy, crossings,
   Petrosian, Hurst, expected shortfall, tail fraction, pente et détails Haar.
 
-Les rolling mean/min/max/quantile/correlation déjà vectorisés restent dans
-pandas/NumPy, les indicateurs TA-Lib dans leur bibliothèque native, et les
-récurrences Numba restent disponibles. Les FFT et ajustements AR/PACF gardent
-leurs implémentations NumPy/LAPACK. Leur parcours de fenêtres Python n'a pas été
-remplacé par un moteur FFT C++ dans cette modification.
+Les rolling mean/min/max/quantile/correlation déjà vectorisés restent dans pandas/NumPy,
+les indicateurs TA-Lib dans leur bibliothèque native, et les récurrences Numba restent
+disponibles. Les FFT et ajustements AR/PACF gardent leurs implémentations NumPy/LAPACK.
+Leur parcours de fenêtres utilise Python.
 
 ## Architecture et installation
 
 `cpp/native.cpp` contient les noyaux C++17. `pybind11` échange les buffers NumPy ;
-`scikit-build-core` et CMake construisent une wheel native spécifique à la
-plateforme et à la version Python. Compilation Release, sans fast-math, avec
-contraction FMA désactivée sur Clang/GCC pour limiter les changements numériques.
-Les boucles C++ libèrent le GIL. Aucune création de DataFrame ni callback Python
-par fenêtre dans les noyaux portés.
+`scikit-build-core` et CMake construisent une wheel native spécifique à la plateforme et
+à la version Python. Compilation Release, sans fast-math, avec contraction FMA
+désactivée sur Clang/GCC pour limiter les changements numériques. Les boucles C++
+libèrent le GIL. Les noyaux portés traitent les buffers NumPy directement.
 
 ```bash
 uv sync --extra lse --extra plots --reinstall-package pfe
@@ -64,22 +62,22 @@ des fenêtres glissantes à leur longueur. Les sorties restent proportionnelles
 au nombre de lignes et de features. `iter_bars` / `iter_features` continuent de
 borner la mémoire par lots avec les mêmes garanties d'état et de disponibilité.
 
-Les inputs float64 contigus sont transmis sans copie. Un autre dtype ou un
-stride incompatible nécessite une conversion locale par pybind11. Les kernels
-ne modifient jamais l'entrée. Les NaN de chauffe et les gaps restent présents.
+Les inputs float64 contigus sont transmis sans copie. Un autre dtype ou un stride
+incompatible nécessite une conversion locale par pybind11. Les kernels lisent les
+entrées sans les modifier. Les NaN de chauffe et les gaps restent présents.
 
 Deux exceptions conservent la sémantique NumPy antérieure :
 
 - `path.top3_moves_volume_share` utilise encore le tri NumPy, dont l'ordre des
-  égalités dépend de sa version/plateforme. Aucun tri différent n'est substitué.
+  égalités dépend de sa version/plateforme. L'implémentation conserve ce tri.
 - Pour `structure.triangle_convergence`, les pentes presque égales sont
   recomparées avec les dot-products NumPy d'origine. Cela évite qu'un epsilon de
   rounding inverse une décision binaire, notamment sur une série plate.
 
-Les moments glissants reproduisent l'ordre de réduction float64 de NumPy pour
-les fenêtres constantes, afin de préserver également ses conventions NaN.
-La référence Python reste testée avec des tolérances numériques, sans promesse
-d'identité bit à bit entre compilateurs. Aucun historique futur n'est utilisé.
+Les moments glissants reproduisent l'ordre de réduction float64 de NumPy pour les
+fenêtres constantes, afin de préserver également ses conventions NaN. La référence
+Python reste testée avec des tolérances numériques, sans promesse d'identité bit à bit
+entre compilateurs. Les calculs utilisent uniquement les observations déjà disponibles.
 
 ## Reproduire les mesures
 

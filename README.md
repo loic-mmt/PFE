@@ -5,6 +5,11 @@ candles built from finer data. The initial data source is **QQQ, 1-minute OHLCV*
 from [London Strategic Edge](https://londonstrategicedge.com/), using its
 [official SDK](https://github.com/londonstrategicedge/lse-data).
 
+[Market-data inventory and DL roadmap (French)](docs/market-data-roadmap.md)
+documents implemented coverage, free/licensed sources, point-in-time requirements
+and remaining work. [Local LLM extraction prompts](docs/llm-extraction-prompts.md)
+preserve the proposed extraction specification.
+
 ## Setup
 
 Requires Python 3.12+, [uv](https://docs.astral.sh/uv/) and a C++17 compiler
@@ -18,6 +23,103 @@ uv run python examples/quickstart.py     # Synthetic example; no API key needed
 C++ kernels compile automatically. `uv sync` installs the core library without
 the optional LSE/plotting extras. On macOS, `.venv` points to `venv/` to preserve
 editable imports.
+
+## Data qualification before collection
+
+Observation contracts, the security master and the source registry track versions and
+availability. Raw collections use immutable files and atomic manifests. LSE metadata
+audits read a saved snapshot or make capped requests; historical listings, point-in-time
+coverage and account entitlements require separate verification.
+
+```bash
+uv run python examples/data_qualification.py  # Synthetic, offline
+uv run python scripts/qualify_lse.py --snapshot discovery.json --symbol QQQ@etf
+```
+
+See [contracts, CLI, replay and qualification](docs/qualification.md).
+
+## Exchange-session daily features
+
+Daily downloads support multiple tickers, exchange calendars, RTH aggregation and
+per-instrument indicators with quality masks and ages. Versioned splits/dividends
+produce separate, availability-safe return bridges.
+
+```bash
+uv run --extra calendars python examples/daily_market.py  # Synthetic, offline
+uv run --extra lse --extra calendars --env-file .env python scripts/download_data.py \
+  --timeframe 1d --tickers SPY QQQ --dataset etf \
+  --calendar XNYS --daily-label session_date --currency USD \
+  --start 2026-03-01 --end 2026-04-01 --snapshot-id daily-20261012
+```
+
+Use an explicit calendar and provider label convention. Receipt is the default;
+provider completeness and historical publication remain unqualified. See
+[daily inputs, corporate actions, features and replay](docs/daily-market.md).
+
+## Reference, macro and fundamental features
+
+Reference features cover benchmarks, FX, commodities and matched-horizon
+beta/correlation. Bounded collectors support FRED/ALFRED, EIA, Cboe, World Bank and SEC
+submissions/XBRL for financial ratios. Each series retains units, economic periods,
+availability and revisions. Receipt is the default; date-level reconstructions retain
+explicit uncertainty. No provider key is needed for local calculations.
+
+```bash
+uv run python examples/context_features.py  # Synthetic, offline
+uv sync --extra commodities                 # Optional Pink Sheet XLSX reader
+```
+
+Use `compute_reference_features`, `compute_fred_features` and
+`compute_fundamental_features` at explicit decisions. See [reference, macro and
+fundamental APIs](docs/context-features.md).
+
+Document APIs archive TXT/HTML and optional PDF text, then extract facts from imported
+JSON or a local Ollama model identified by digest. Evidence, rejected outputs and
+semantic reviews are retained. Versioned graphs, events and actuals/guidance/estimates
+produce features at explicit decisions, with coverage masks and optional
+sentiment/embeddings. Install the model separately. See [document APIs, CLI and
+budgets](docs/document-features.md) and `examples/document_features.py` for an offline
+example.
+
+International adapters cover TSMC/MOPS/TWSE, OpenDART, Eurostat, BoJ/e-Stat, NBS, USGS
+and GDELT discovery/local event imports. Captures retain source clocks and revisions.
+Factors join decisions through documented graph links, with missing/stale masks and
+bounded collection budgets. See [international APIs, CLI and
+budgets](docs/international-features.md).
+
+CFTC COT captures, licensed consensus/detail imports and prospective option archives
+feed bounded NumPy datasets for GRU/TCN, GNN and Event Encoder. Labels stay separate;
+temporal splits purge overlapping label horizons; scalers fit unique training cells
+only. Artifacts preserve masks and per-cell provenance without installing a DL
+framework. See [COT, consensus and option archives](docs/p3-sources.md) and [model
+datasets, API and CLI](docs/model-datasets.md).
+
+## Reuse from another project
+
+`TimeframeSpec`, `build_timeframe_observations` and `build_timeframe_dataset`
+accept local OHLCV at explicit source frequencies and produce multiple completed
+timeframes on any decision grid. Session bars use actual schedules. Source receipt
+times gate inputs; labels count decision steps rather than days.
+
+`run_pipeline` orders versioned operations by dependency, resumes immutable results and
+enforces global download/archive budgets for the requested exports. Partitioned readers,
+sequence writers and a global train-only scaler avoid materializing a whole panel. Macro
+withdrawals/calendar revisions, dated security snapshots and sector ranks, and explicit
+IFRS/custom/segment/debt mappings are also available as public APIs.
+
+```bash
+uv run python examples/reusable_pipeline.py  # Synthetic; no keys or downloads
+```
+
+See [reusable APIs, multi-timeframe examples and bounded CLIs](docs/reusable-pipelines.md)
+and [small integration checks and their limits](docs/immediate-verification.md).
+
+Graph APIs include supplier/customer/competitor channels, two-hop paths, shared
+neighbors/exposures, directed centralities/PageRank and network changes. Explicit
+structured relations can bypass LLM extraction; security bindings, context nodes,
+separate edge attributes and partitioned GNN exports are supported. See [graph features
+and data requirements](docs/graph-features.md). `examples/graph_features.py` runs
+entirely offline.
 
 ## Download data
 
@@ -158,6 +260,39 @@ LSE latest snapshots lack historical publication/vintage timestamps. The loader
 uses **receipt time**, so they cannot fill earlier historical bars. Verified
 historical releases use explicit `available_at` inputs. See [schemas, exact names
 and timing](docs/macro.md), or run `python examples/macro_features.py` offline.
+
+## Options features
+
+Bounded LSE samples: 20 rows per query, 1 MiB maximum output, no bulk exports.
+
+```bash
+uv run --extra lse --env-file .env python scripts/download_options.py --ticker QQQ --chain --flow
+```
+
+```python
+from pfe import load_options, compute_option_feature
+
+options = load_options("data/raw/lse/options/QQQ_sample.json")
+iv = compute_option_feature(bars, "options.volatility.iv_mean", chain=options.chain)
+```
+
+Individual calculations and `compute_option_features(..., groups=...)` both work.
+Chain snapshots become available at receipt; they do not provide historical chains.
+Expired contracts are filtered by expiration date, independently of provider DTE.
+
+| Group | Features |
+|---|---|
+| `options.activity` | Call/put volume and premium, ratios, imbalances |
+| `options.volatility` | IV, ATM estimates, delta skew/butterfly, term structure, expected move |
+| `options.greeks` | Mean and volume-weighted delta/gamma/theta/vega/rho |
+| `options.positioning` | Optional OI totals, strike concentration/peaks, unsigned gamma/OI |
+| `options.flow` | Windowed observed prints or contract candles, premium, IV, delta-weighted volume |
+| `options.contract` | Per-contract returns, candle range, IV/greeks, volume and freshness |
+| `options.quality` | Coverage, expired rows, age, provenance and query caps |
+
+Missing OI/bid/ask stays NaN; incomplete samples describe only supplied contracts.
+No dealer positioning or trade direction is inferred. See [schemas and exact
+names](docs/options.md), or run `python examples/option_features.py` offline.
 
 ## OHLCV feature groups
 

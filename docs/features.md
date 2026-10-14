@@ -6,7 +6,7 @@
   same bar-open index, all groups by default. Windows count source observations.
 - `enrich_bars(bars, frequency, ...)`: target OHLCV plus path, profile and quality
   columns. Accepts arbitrary positive fixed source multiples: 7min, 45min, 2h,
-  1D, 3s from 1s input. It never upsamples to invent data.
+  1D, 3s from 1s input. The target duration must be at least the source duration.
 - `build_features(bars, frequency, windows=..., groups=..., ...)`: both families;
   rolling windows count target bars, internal descriptors use source bars.
 - `transform_features(frame, ...)`: positive lags, differences, trailing mean/std,
@@ -56,14 +56,14 @@ not a beta against an external market benchmark. MAVP receives a constant period
 equal to the window (no external adaptive period series). See the actual input
 mapping in `feature_catalog()`.
 
-Extension parameters are explicit conventions: ALMA offset=.85/sigma=6;
-envelopes ±2%; Supertrend multiplier=3; Keltner multiplier=2; FRAMA rounds odd
-windows up to an even length; Connors RSI periods `max(2,w//3), max(2,w//5), w`;
-KST horizons w/2w/3w/4w; Ichimoku horizons w/2w/4w, visible spans shifted by 2w.
-Fisher uses rolling median-price range, clipped at ±.999. ZigZag and repeated
-confirmed pivot tolerance use `structure_threshold=.01` by default. These
-definitions are programmable conventions; discretionary visual patterns are
-not uniquely defined by their names. Signals never get backdated to pivots.
+Extension parameters are explicit conventions: ALMA offset=.85/sigma=6; envelopes ±2%;
+Supertrend multiplier=3; Keltner multiplier=2; FRAMA rounds odd windows up to an even
+length; Connors RSI periods `max(2,w//3), max(2,w//5), w`; KST horizons w/2w/3w/4w;
+Ichimoku horizons w/2w/4w, visible spans shifted by 2w. Fisher uses rolling median-price
+range, clipped at ±.999. ZigZag and repeated confirmed pivot tolerance use
+`structure_threshold=.01` by default. Pattern definitions follow these conventions;
+visual interpretations may differ. Signals become available when their pivots are
+confirmed.
 
 ## Linear-model outputs
 
@@ -75,6 +75,10 @@ External macro observations and announcement calendars use `compute_macro_featur
 and `compute_macro_features`. Groups cover series, calendar, surprises and ordered
 spreads. See [macro data and features](macro.md) for schemas and release availability.
 They do not add model fitting to ordinary OHLCV group calls.
+
+Options use `compute_option_feature` / `compute_option_features`, with activity,
+volatility, greeks, positioning, flow, contract and quality groups. They consume
+external chain/print/contract frames; see [options features](options.md).
 
 ## Intrabar groups
 
@@ -183,9 +187,10 @@ compute_features(bars, groups=("returns", "calendar"))
 Individual calculations evaluate only the gap dependencies; existing session
 streaming limitations also apply to the two session gaps (see [performance](performance.md)).
 
-Zero denominators, insufficient history and undefined standardized moments are
-NaN. No infinities, warm-up backfilling or future targets. Rolling skew/kurtosis
-center within each past window so rounding cannot depend on future input means.
+Zero denominators, insufficient history and undefined standardized moments are NaN.
+Warm-up values remain missing, and calculations use past observations only. Rolling
+skew/kurtosis center within each past window so rounding cannot depend on future input
+means.
 
 Complexity methods are finite-window estimates, not claims that a financial
 series follows a particular stochastic model. Sample entropy excludes self-pairs

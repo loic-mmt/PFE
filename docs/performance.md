@@ -13,6 +13,13 @@ Voir [les mesures et la mémoire des sorties](benchmarks/macro.json). La taille 
 résultats reste proportionnelle aux lignes × features ; traiter les bougies par
 lots en conservant le même historique macro pour obtenir les mêmes résultats.
 
+Les [features options](options.md) séparent snapshots, prints et bougies de contrat.
+Une sortie sélectionnée ne normalise pas les sources inutilisées. Réductions sur
+les snapshots puis recherches vectorisées par lots de 262 144 lignes, sans boucle
+Python par bougie marché. Benchmark hors réseau :
+`python scripts/benchmark_options.py --rows 100000 --repeat 3` ;
+voir [temps et tailles de sorties](benchmarks/options.json).
+
 L'API par groupes reste disponible : `compute_features(..., groups=...)`,
 `enrich_bars(...)` et `build_features(..., groups=...)` gardent leur comportement.
 Le calcul indépendant est une API supplémentaire.
@@ -93,26 +100,25 @@ for features in iter_features(batches, ("returns.log", "technical.rsi_w14", "tec
     consume(features)  # écrire/traiter puis libérer chaque lot
 ```
 
-`iter_bars` projette seulement OHLCV et timestamps du Parquet. `iter_features`
-conserve le recouvrement nécessaire aux fenêtres finies et l'état exact RSI,
-EMA et ATR entre lots. `gap_policy='reset'` réinitialise cet état aux trous, même
-entre deux lots ; `allow` enchaîne les observations. Aucun recalcul de tout
-l'historique, aucune approximation par une courte chauffe d'EMA/RSI.
+`iter_bars` projette seulement OHLCV et timestamps du Parquet. `iter_features` conserve
+le recouvrement nécessaire aux fenêtres finies et l'état exact RSI, EMA et ATR entre
+lots. `gap_policy='reset'` réinitialise cet état aux trous, même entre deux lots ;
+`allow` enchaîne les observations. Les lots réutilisent cet état pour conserver les
+valeurs du calcul complet.
 
 Pour l'agrégation, fournir `frequency=` à `iter_features` : seule la dernière
 bougie provisoire est retenue entre lots. Toutes les features intrabar/profil
 sont disponibles, avec les mêmes conventions d'origine et de disponibilité.
 Les features OHLCV cible disposent du même support que les features source.
 
-**Limites explicites :** le streaming des fenêtres finies et des trois
-récurrences ci-dessus est disponible. Les autres récurrences natives (MACD,
-ADX…), les états infinis personnalisés, les features calendar/session et
-complexity sont rejetés en streaming. Leur calcul individuel complet reste
-possible. Les bougies cible en streaming exigent `partial='drop'`, sans `as_of`.
-La mémoire dépend aussi des fenêtres demandées et de la durée cible : choisir
-une fenêtre gigantesque ou une seule bougie englobant tout le fichier exige de
-conserver son historique. Ne pas convertir le générateur en liste ni concaténer
-tous les lots si l'objectif est de borner la mémoire.
+**Streaming pris en charge :** le streaming des fenêtres finies et des trois récurrences
+ci-dessus est disponible. Les autres récurrences natives (MACD, ADX…), les états infinis
+personnalisés, les features calendar/session et complexity sont rejetés en streaming.
+Leur calcul individuel complet reste possible. Les bougies cible en streaming exigent
+`partial='drop'`, sans `as_of`. La mémoire dépend aussi des fenêtres demandées et de la
+durée cible : choisir une fenêtre gigantesque ou une seule bougie englobant tout le
+fichier exige de conserver son historique. Ne pas convertir le générateur en liste ni
+concaténer tous les lots si l'objectif est de borner la mémoire.
 
 ```bash
 uv run python scripts/build_features.py \
@@ -157,8 +163,8 @@ uv run python scripts/benchmark_features.py --case stream-rsi \
   --rows 100000000 --batch-size 100000
 ```
 
-Sélectionner une feature supprime le travail sans rapport ; cela ne change pas
-sa complexité mathématique. Sample entropy utilise des distances entre motifs,
-certains descripteurs utilisent FFT/Haar ou des statistiques par fenêtre. Leurs
-coûts dépendent de la fenêtre et peuvent rester élevés sur des centaines de
-millions de lignes. Le benchmark RSI n'est pas une estimation de ces calculs.
+Sélectionner une feature limite le calcul à ses dépendances. Son coût dépend toujours de
+la formule et de la fenêtre choisies. Sample entropy utilise des distances entre motifs,
+certains descripteurs utilisent FFT/Haar ou des statistiques par fenêtre. Leurs coûts
+dépendent de la fenêtre et peuvent rester élevés sur des centaines de millions de
+lignes. Le benchmark RSI n'est pas une estimation de ces calculs.

@@ -5,13 +5,14 @@ Install `uv sync --extra plots` (or `pip install 'pfe[plots]'`). Combine with
 computing features never imports it. `make setup` installs both extras.
 
 All functions are available from `pfe` or `pfe.plots`. They return a Matplotlib
-`Figure`, leave input data unchanged, and never call `show` or `savefig`.
-Use `fig.savefig('chart.png', dpi=150)` for PNG, or choose `.svg` / `.pdf` for
-vector exports ([Matplotlib savefig API](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.Figure.savefig.html)).
+`Figure`, leave input data unchanged, and let the caller choose when to `show` or
+`savefig`. Use `fig.savefig('chart.png', dpi=150)` for PNG, or choose `.svg` / `.pdf`
+for vector exports ([Matplotlib savefig
+API](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.Figure.savefig.html)).
 In Jupyter, leave the figure as the last expression. In a desktop script use
-`matplotlib.pyplot.show()` after creating your figures; close finished figures
-with `matplotlib.pyplot.close(fig)`. For batch servers use `MPLBACKEND=Agg` before
-launching Python. Set `MPLCONFIGDIR` to a writable cache directory if necessary.
+`matplotlib.pyplot.show()` after creating your figures; close finished figures with
+`matplotlib.pyplot.close(fig)`. For batch servers use `MPLBACKEND=Agg` before launching
+Python. Set `MPLCONFIGDIR` to a writable cache directory if necessary.
 
 All plots use a terminal-inspired theme: black canvas, orange/white curves and
 labels, monospace typography, and subdued grid lines. The theme is applied only
@@ -46,13 +47,13 @@ fig = plot_bars(
 fig.savefig("qqq.png", dpi=150)
 ```
 
-`frequency=None` draws existing bars; their width uses `bars.attrs['frequency']`
-when present, otherwise `source_frequency='1min'`. Pass the actual frequency for
-frames loaded from files without metadata. With `frequency='7min'`, aggregation
-uses the existing `enrich_bars` rules: any fixed integer source multiple, configurable
-`origin` and `offset`, truncated edge bars dropped. No empty candles are fabricated.
-Candle bodies are centered inside each actual bar interval; temporal gaps stay
-visible. `volume=False` removes the volume panel. `figsize=(12, 6)` controls size.
+`frequency=None` draws existing bars; their width uses `bars.attrs['frequency']` when
+present, otherwise `source_frequency='1min'`. Pass the actual frequency for frames
+loaded from files without metadata. With `frequency='7min'`, aggregation uses the
+existing `enrich_bars` rules: any fixed integer source multiple, configurable `origin`
+and `offset`, truncated edge bars dropped. Empty intervals remain gaps. Candle bodies
+are centered inside each actual bar interval; temporal gaps stay visible. `volume=False`
+removes the volume panel. `figsize=(12, 6)` controls size.
 
 `overlays` is a separate numeric frame; `columns` must select a small explicit
 set of price-scale columns. Overlays use availability times when metadata exists,
@@ -123,11 +124,11 @@ from pfe import plot_profile_bars
 fig = plot_profile_bars(bars, frequency="45min", bins=20, segments=5, origin=bars.index[0])
 ```
 
-Each completed target interval contains a left-packed profile on a shared actual
-price axis. One letter has the same horizontal width across candles. Each target
-divides its own high-low range into `bins` price rows; no missing letters are
-fabricated. Granularity, `source_frequency`, `origin`, `offset`, `timezone` and
-`letters` are configurable. Slice the displayed interval to keep letters readable.
+Each completed target interval contains a left-packed profile on a shared actual price
+axis. One letter has the same horizontal width across candles. Each target divides its
+own high-low range into `bins` price rows; unobserved segments remain empty.
+Granularity, `source_frequency`, `origin`, `offset`, `timezone` and `letters` are
+configurable. Slice the displayed interval to keep letters readable.
 
 ## Distributions and correlation
 

@@ -16,16 +16,15 @@ uv run --extra lse --env-file .env python scripts/download_macro.py \
   --max-bytes 1048576 --output data/raw/lse/macro/sample.json
 ```
 
-Requires `LSE_API_KEY`. The script queries individual economics series and the
-economic calendar; it never exports complete datasets or paginates. Start is
-inclusive, end exclusive, UTC; `YYYY-MM-DD` and timezone-aware ISO timestamps work.
-Each request returns at most `--limit` rows (default 100, maximum 5000). The output
-cap defaults to 1 MiB; oversized responses are rejected before writing. Existing
-files are never overwritten. A `limit_reached` flag means a query may be incomplete;
-this command produces a sample, not a completeness guarantee.
+Requires `LSE_API_KEY`. The script queries individual economics series and the economic
+calendar, with one bounded response per request. Start is inclusive, end exclusive, UTC;
+`YYYY-MM-DD` and timezone-aware ISO timestamps work. Each request returns at most
+`--limit` rows (default 100, maximum 5000). The output cap defaults to 1 MiB; oversized
+responses are rejected before writing. Existing files are protected from overwrite.
+`limit_reached` flags samples that may be incomplete.
 
-Downloaded files stay outside Git. No network connection or LSE SDK is needed to
-load local snapshots or compute features.
+Downloaded files stay outside Git. Local snapshot loading and feature calculation run
+offline with the core library.
 
 ```python
 from pfe import load_macro, compute_macro_feature, compute_macro_features

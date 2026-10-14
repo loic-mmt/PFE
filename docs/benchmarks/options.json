@@ -1,0 +1,29 @@
+{
+  "platform": "macOS-26.5.1-arm64-arm-64bit",
+  "rows": 100000,
+  "chain_rows": 120,
+  "print_rows": 10000,
+  "repeat": 3,
+  "results": {
+    "iv_mean": {
+      "median_seconds": 0.018532624933868647,
+      "columns": 1,
+      "output_bytes": 800000
+    },
+    "volatility": {
+      "median_seconds": 0.0494168340228498,
+      "columns": 12,
+      "output_bytes": 9600000
+    },
+    "flow_premium": {
+      "median_seconds": 0.029403541004285216,
+      "columns": 1,
+      "output_bytes": 800000
+    },
+    "all": {
+      "median_seconds": 0.20672645804006606,
+      "columns": 65,
+      "output_bytes": 52000000
+    }
+  }
+}

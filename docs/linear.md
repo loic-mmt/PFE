@@ -1,9 +1,9 @@
 # Linear-model features
 
-`compute_linear_features` turns chronological OLS/Ridge forecasts into features.
-It fits rolling training windows, predicts future **log returns**, and exposes
-coefficients, training diagnostics and delayed forecast errors. It uses NumPy;
-no extra dependencies or full-history estimator fitting are required.
+`compute_linear_features` turns chronological OLS/Ridge forecasts into features. It fits
+rolling training windows, predicts future **log returns**, and exposes coefficients,
+training diagnostics and delayed forecast errors. NumPy fits each eligible training
+window.
 
 ## API
 
@@ -75,8 +75,8 @@ avoid cancellation when predictors have large offsets.
 |---|---|
 | `linear.realized_error_hN` | Realized N-bar log return minus the original forecast, emitted at its maturity |
 
-At row i this is the error of the forecast made at i−N, using the model that was
-actually available then. It never compares against a retrospectively refitted model.
+At row i this is the error of the forecast made at i−N, using the model available at
+that time.
 
 ## Configuration
 
@@ -161,9 +161,9 @@ Validation and predictor construction are included; setup and I/O are excluded.
 | All 11 outputs | 20 bars | 0.3292 s |
 | One prediction | 1 bar | 5.8630 s |
 
-For downstream stacking, use the chronological predictions produced here;
-tune hyperparameters on past training/validation data and keep a final time-based
-test period separate. No backtest or claim of predictive performance is included.
+For downstream stacking, use the chronological predictions produced here; tune
+hyperparameters on past training/validation data and keep a final time-based test period
+separate. Predictive performance requires a separate backtest.
 
 References: [NumPy least squares](https://numpy.org/doc/stable/reference/generated/numpy.linalg.lstsq.html),
 [Ridge objective](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.Ridge.html),
