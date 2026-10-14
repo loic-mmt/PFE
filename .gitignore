@@ -18,3 +18,4 @@ htmlcov/
 .ipynb_checkpoints/
 /data/**
 !/data/README.md
+docs/archive/
